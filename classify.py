@@ -13,7 +13,7 @@ test_dat = np.zeros((len(test_x), 52))
 
 # Extract features from the training data
 # 1: card is present, 0: card is absent
-# 0-12: suit 2, 13-25: suit 2, 26-38: suit 3, 39-52: suit4
+# 0-12: suit 2, 13-25: suit 2, 26-38: suit 3, 39-52: suit 4
 for i in range(len(dset)):
     for j in range(0,10,2):
         data[i, (dset[i,j]-1)*13 + (dset[i,j+1]-1)]=1
@@ -26,7 +26,7 @@ for i in range(len(test_x)):
 # Parameters
 learning_rate = 0.01
 num_steps = 6000
-batch_size = 128
+batch_size = 256
 display_step = 100
 
 # Network Parameters
@@ -35,14 +35,13 @@ n_hidden_2 = 256 # 2nd layer number of neurons
 num_input = 52   # 4 * 13 cards
 num_classes = 10 # number of classes 
 
-
 ctr = -1
 def get_batch(batch_size):
     """Get a batch of data."""
     global ctr
     global data
 
-    # shuffle the data if we don't have enough left then go back to start
+    # shuffle the data if we don't have enough left, then go back to start
     if ctr*batch_size > len(data)-batch_size: 
         data = np.random.permutation(data)
         ctr = -1
@@ -53,7 +52,7 @@ def get_batch(batch_size):
     return batch_data, batch_labels
 
 def dense_to_one_hot(labels_dense, num_classes=10):
-    """Convert class labels from scalars to one-hot vectors."""
+    """Convert class labels to one-hot vectors."""
     num_labels = labels_dense.shape[0]
     offset = np.arange(num_labels) * num_classes
     labels_one_hot = np.zeros((num_labels, num_classes))
@@ -75,13 +74,16 @@ def neural_net(x):
 X = tf.placeholder("float", [None, num_input])
 Y = tf.placeholder("float", [None, num_classes])
 
+# Learning rate 
+lr = tf.placeholder(tf.float32)
+
 # Construct model
 logits = neural_net(X)
 
 # Define loss and optimizer
 loss_op = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
     logits=logits, labels=Y))
-optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
+optimizer = tf.train.AdamOptimizer(learning_rate=lr)
 train_op = optimizer.minimize(loss_op)
 
 # Evaluate model (with test logits, for dropout to be disabled)
@@ -89,6 +91,7 @@ pred_classes = tf.argmax(logits, axis=1)
 correct_pred = tf.equal(pred_classes, tf.argmax(Y, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
+# Create saver
 saver = tf.train.Saver()
 
 # Initialize the variables (i.e. assign their default value)
@@ -101,10 +104,11 @@ with tf.Session() as sess:
 
     for step in range(1, num_steps+1):
         batch_x, batch_y = get_batch(batch_size)
-        # Run optimization op (backprop)
-        sess.run(train_op, feed_dict={X: batch_x, Y: batch_y})
 
-        if step % 2000 == 0:
+        # Run optimization
+        sess.run(train_op, feed_dict={X: batch_x, Y: batch_y, lr:learning_rate})
+
+        if step % 5000 == 0:
             learning_rate *= 0.5
 
         if step % display_step == 0 or step == 1:
@@ -115,16 +119,16 @@ with tf.Session() as sess:
                   "{:.4f}".format(loss) + ", Training Accuracy= " + \
                   "{:.3f}".format(acc))
 
+    # Save the model
     saver.save(sess, 'model/card_model', global_step=step)
-
-    print("Optimization Finished!")
-
-    # Calculate accuracy for MNIST test images
-    print("Testing Accuracy:", \
-        sess.run(accuracy, feed_dict={X: test_dat,
-                                      Y: dense_to_one_hot(test_y)}))
     
-    pred = sess.run(pred_classes, feed_dict={X: test_dat, Y:dense_to_one_hot(test_y)})
+    print "Optimization Finished!"
+
+    # Calculate accuracy for the test set
+    pred = sess.run(pred_classes, feed_dict={X: test_dat, Y: dense_to_one_hot(test_y)})
+    test_acc = np.sum(1*(pred == test_y))*1./len(test_y)
+
+    print "Testing Accuracy:", test_acc
 
     file = open('output.txt', 'w')
     for i in pred:
