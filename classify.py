@@ -25,13 +25,15 @@ for i in range(len(test_x)):
 
 # Parameters
 learning_rate = 0.01
-num_steps = 6000
+num_steps = 10000
 batch_size = 128
 display_step = 100
 
 # Network Parameters
-n_hidden_1 = 256 # 1st layer number of neurons
-n_hidden_2 = 256 # 2nd layer number of neurons
+#n_hidden_1 = 256 # 1st layer number of neurons
+#n_hidden_2 = 256 # 2nd layer number of neurons
+n_hidden_1 = 256
+n_hidden_2 = 256
 num_input = 52   # 4 * 13 cards
 num_classes = 10 # number of classes 
 
