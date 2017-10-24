@@ -1,0 +1,2 @@
+model_checkpoint_path: "card_model-6000"
+all_model_checkpoint_paths: "card_model-6000"

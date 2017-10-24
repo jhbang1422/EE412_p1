@@ -25,7 +25,7 @@ for i in range(len(test_x)):
 
 # Parameters
 learning_rate = 0.01
-num_steps = 10000
+num_steps = 6000
 batch_size = 128
 display_step = 100
 
@@ -85,10 +85,11 @@ optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
 train_op = optimizer.minimize(loss_op)
 
 # Evaluate model (with test logits, for dropout to be disabled)
-correct_pred = tf.equal(tf.argmax(logits, 1), tf.argmax(Y, 1))
+pred_classes = tf.argmax(logits, axis=1)
+correct_pred = tf.equal(pred_classes, tf.argmax(Y, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
-pred_classes = tf.argmax(logits, axis=1)
+saver = tf.train.Saver()
 
 # Initialize the variables (i.e. assign their default value)
 init = tf.global_variables_initializer()
@@ -114,11 +115,17 @@ with tf.Session() as sess:
                   "{:.4f}".format(loss) + ", Training Accuracy= " + \
                   "{:.3f}".format(acc))
 
+    saver.save(sess, 'model/card_model', global_step=step)
 
-    # pred = 
     print("Optimization Finished!")
 
     # Calculate accuracy for MNIST test images
     print("Testing Accuracy:", \
         sess.run(accuracy, feed_dict={X: test_dat,
                                       Y: dense_to_one_hot(test_y)}))
+    
+    pred = sess.run(pred_classes, feed_dict={X: test_dat, Y:dense_to_one_hot(test_y)})
+
+    file = open('output.txt', 'w')
+    for i in pred:
+    	file.write(str(i) + "\n")
