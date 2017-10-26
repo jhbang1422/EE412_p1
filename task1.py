@@ -33,12 +33,12 @@ def get_batch(batch_size):
     return batch_data, batch_labels
 
 def dense_to_one_hot(labels_dense, num_classes=10):
-        """Convert class labels to one-hot vectors."""
-        num_labels = labels_dense.shape[0]
-        offset = np.arange(num_labels) * num_classes
-        labels_one_hot = np.zeros((num_labels, num_classes))
-        labels_one_hot.flat[offset + labels_dense.ravel()] = 1
-        return labels_one_hot
+    """Convert class labels to one-hot vectors."""
+    num_labels = labels_dense.shape[0]
+    offset = np.arange(num_labels) * num_classes
+    labels_one_hot = np.zeros((num_labels, num_classes))
+    labels_one_hot.flat[offset + labels_dense.ravel()] = 1
+    return labels_one_hot
 
 class RankClassifier:
     def __init__(self, mode):
@@ -91,8 +91,6 @@ class RankClassifier:
         return pred
 
     def train(self):
-        # Run the initializer
-        self.sess.run(self.init)
 
         for step in range(1, num_steps+1):
             batch_x, batch_y = get_batch(batch_size)
@@ -127,12 +125,12 @@ dset = np.genfromtxt('train_data.csv', dtype=np.uint8, delimiter=',')
 test_x = np.genfromtxt('test_data.csv', dtype=np.uint8, delimiter=',')
 test_y = np.genfromtxt('test_hand.csv', dtype=np.uint8, delimiter=',')
 
-data = np.zeros((len(dset), 53), dtype=np.uint8)
-test_dat = np.zeros((len(test_x), 52))
+data = np.zeros((len(dset), num_input + 1), dtype=np.int8)
+test_dat = np.zeros((len(test_x), num_input))
 
 # Extract features from the training data
 # 1: card is present, 0: card is absent
-# 0-12: suit 2, 13-25: suit 2, 26-38: suit 3, 39-52: suit 4
+# 0-12: suit 2, 13-25: suit 2, 26-38: suit 3, 39-51: suit 4
 for i in range(len(dset)):
     for j in range(0,10,2):
         data[i, (dset[i,j]-1)*13 + (dset[i,j+1]-1)]=1
