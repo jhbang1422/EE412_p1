@@ -1,9 +1,10 @@
 import numpy as np
 import tensorflow as tf 
+from sklearn.metrics import confusion_matrix
 
 flags = tf.flags
 flags.DEFINE_string("mode", "test", "Test or train")
-flags.DEFINE_string("weights", "model/98/card_model-6000", "filename of the weights for test mode")
+flags.DEFINE_string("weights", "model/99/card_model-6000", "filename of the weights for test mode")
 
 # Parameters
 num_steps = 6000
@@ -13,7 +14,7 @@ display_step = 100
 # Network Parameters
 n_hidden_1 = 256 # 1st layer number of neurons
 n_hidden_2 = 256 # 2nd layer number of neurons
-num_input = 52   # 4 * 13 cards
+num_input = 58#69   # 4 * 13 cards
 num_classes = 10 # number of classes 
 
 ctr = -1
@@ -131,14 +132,36 @@ test_dat = np.zeros((len(test_x), num_input))
 # Extract features from the training data
 # 1: card is present, 0: card is absent
 # 0-12: suit 2, 13-25: suit 2, 26-38: suit 3, 39-51: suit 4
+# 52-55: number of cards per suit
+# 55-68: number of cards per number
 for i in range(len(dset)):
     for j in range(0,10,2):
         data[i, (dset[i,j]-1)*13 + (dset[i,j+1]-1)]=1
-    data[i, 52] = dset[i, 10]
+    # for j in range(0,4):
+    #     data[i,52+j] = np.sum((data[i,j*13:(j+1)*13]))
+    # for j in range(0,13):
+    #     data[i,56+j] = data[i,j] + data[i,13+j] + data[i,26+j] + data[i,39+j]
+    data[i, 52] = np.sum(data[i, 0:13]*data[i, 13:26])
+    data[i, 53] = np.sum(data[i, 26:39]*data[i, 39:52])
+    data[i, 54] = np.sum(data[i, 13:26]*data[i, 26:39])
+    data[i, 55] = np.sum(data[i, 0:13]*data[i, 39:52])
+    data[i, 56] = np.sum(data[i, 0:13]*data[i, 26:39])
+    data[i, 57] = np.sum(data[i, 13:26]*data[i, 39:52])
+    data[i, num_input] = dset[i, 10]
 
 for i in range(len(test_x)):
     for j in range(0,10,2):
         test_dat[i, (test_x[i,j]-1)*13 + (test_x[i,j+1]-1)]=1
+    test_dat[i, 52] = np.sum(test_dat[i, 0:13]*test_dat[i, 13:26])
+    test_dat[i, 53] = np.sum(test_dat[i, 26:39]*test_dat[i, 39:52])
+    test_dat[i, 54] = np.sum(test_dat[i, 13:26]*test_dat[i, 26:39])
+    test_dat[i, 55] = np.sum(test_dat[i, 0:13]*test_dat[i, 39:52])
+    test_dat[i, 56] = np.sum(test_dat[i, 0:13]*test_dat[i, 26:39])
+    test_dat[i, 57] = np.sum(test_dat[i, 13:26]*test_dat[i, 39:52])
+    # for j in range(0,4):
+    #     test_dat[i,52+j] = np.sum((test_dat[i,j*13:(j+1)*13]))
+    # for j in range(0,13):
+    #     test_dat[i,56+j] = test_dat[i,j] + test_dat[i,13+j] + test_dat[i,26+j] + test_dat[i,39+j]
 
 rc = RankClassifier(mode=flags.FLAGS.mode)
 
@@ -155,3 +178,9 @@ for i in pred:
     file.write(str(i) + "\n")
 
 print "Output saved in output.txt"
+
+from sklearn.metrics import confusion_matrix
+cm = confusion_matrix(test_y, pred)
+np.savetxt("cm.csv", cm, delimiter=",")
+
+print "Confusion matrix saved in cm.csv"
