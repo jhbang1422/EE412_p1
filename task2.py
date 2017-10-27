@@ -213,7 +213,7 @@ new_best = []
 since = time.time()
 
 for i in range(num_data):
-    curr_best = pred[i]
+    curr_best, curr_best_index = pred[i], i
     for j in np.where(test_dat[i][0:52] == 1)[0]: # where the card is present
         test_dat[i][j] = 0.0 # suppose that card is absent
         for k in np.where(test_dat[i][0:52] == 0)[0]: # and then suppose some other card is present
@@ -230,7 +230,7 @@ for i in range(num_data):
                 new_pred = rc.classify(x_in) # evaluate the hand of the combination with the supposed card
                 if (new_pred > curr_best):
                     print("better combination found!\tnew hand: " + str(new_pred))
-                    curr_best = new_pred
+                    curr_best, curr_best_index = new_pred, i
                     #new_dat[i] = test_dat[i]
                     new_dat.append(test_dat[i])
                 test_dat[i][k] = 0.0
@@ -242,6 +242,6 @@ time_taken = time.time() - since
 print (str(time_taken) + " seconds elapsed for " + str(num_data) + " data points\n")
         
 file2 = open('output_task2.txt', 'w')
-for i in new_dat:
-    file2.write(str(new_dat) + '\n')
+for i in range(len(new_dat)):
+    file2.write(str(new_dat[i]) + '\n')
 file2.close()
