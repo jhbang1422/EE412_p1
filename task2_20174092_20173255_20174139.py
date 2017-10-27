@@ -1,11 +1,10 @@
 import numpy as np
 import tensorflow as tf 
-import csv 
 import time 
 
 # Read the test data
 test_x = np.genfromtxt('test_data.csv', dtype=np.uint8, delimiter=',')
-test_y = np.genfromtxt('test_hand.csv', dtype=np.uint8, delimiter=',')
+# test_y = np.genfromtxt('test_hand.csv', dtype=np.uint8, delimiter=',')
 
 test_dat = np.zeros((len(test_x), 58))
 
@@ -25,15 +24,6 @@ n_hidden_1 = 256 # 1st layer number of neurons
 n_hidden_2 = 256 # 2nd layer number of neurons
 num_input = 58   # 4 * 13 cards + 6 features 
 num_classes = 10 # number of classes 
-
-
-def dense_to_one_hot(labels_dense, num_clasees=10):
-    num_labels = len(labels_dense)
-    labels_one_hot = np.zeros((num_labels,num_classes))
-    for i in range(num_labels):
-        labels_one_hot[i][int(labels_dense[i])]=1
-    return labels_one_hot
-
 
 def neural_net(x):
     # Hidden fully connected layer with 256 neurons
@@ -60,6 +50,7 @@ def five_hot_code(vector, num_cards=58):
     five_hots[0, 57] = np.sum(five_hots[0, 13:26]*five_hots[0, 39:52])
     return five_hots
 
+# Find the index that the value is equal to 1
 def find_index(vector):
     list = []
     for i in range(len(vector)):
@@ -67,6 +58,8 @@ def find_index(vector):
             list.append(i)
     return list
 
+# make the matrix that includes all the possibilies about changing
+# the cards in one test dataset
 def make_testset(input):
     list = []
     index = find_index(input)
@@ -85,7 +78,6 @@ def make_testset(input):
 
 # tf Graph input
 X = tf.placeholder("float", [None, num_input])
-Y = tf.placeholder("float", [None, num_classes])
 
 # Learning rate 
 lr = tf.placeholder(tf.float32)
@@ -100,7 +92,6 @@ pred_classes = tf.argmax(logits, axis=1)
 saver = tf.train.Saver()
 
 with tf.Session() as sess:
-    # open csv to write the output (chaning only one card)
     f = open('output_task2', 'w')
     # Restore pre-trained model 
     saver.restore(sess, "model/99/card_model-6000")
@@ -108,7 +99,7 @@ with tf.Session() as sess:
     for i in range(len(test_dat)):
         list = make_testset(test_dat[i])
 
-        pred = sess.run(pred_classes, feed_dict={X: list, Y: dense_to_one_hot(np.ones(len(list))*test_y[i])})
+        pred = sess.run(pred_classes, feed_dict={X: list})
     
         max_idx = np.argmax(pred)
 
