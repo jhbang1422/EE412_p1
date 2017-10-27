@@ -115,11 +115,13 @@ with tf.Session() as sess:
         card_idx = find_index(list[max_idx][0:52])
         # write the output as csv file. 
         for j in range(len(card_idx)):
-            f.write(str(card_idx[j]//13 + 1)+" ")
-            f.write(str(card_idx[j]%13 + 1)+" ")
-        f.write("\n")
+            f.write(str(card_idx[j]//13 + 1)+",")
+            if j == len(card_idx)-1:
+                f.write(str(card_idx[j]%13 + 1)+"\n")
+            else:
+                f.write(str(card_idx[j]%13 + 1)+",")
 
-
+    
     f.close()
     end = time.time()
     print str(end-start) + 'seconds'
