@@ -3,7 +3,7 @@ import tensorflow as tf
 from sklearn.metrics import confusion_matrix
 
 flags = tf.flags
-flags.DEFINE_string("mode", "test", "Test or train")
+flags.DEFINE_string("mode", "train", "Test or train")
 flags.DEFINE_string("weights", "model/99/card_model-6000", "filename of the weights for test mode")
 
 # Parameters
@@ -134,30 +134,76 @@ test_dat = np.zeros((len(test_x), num_input))
 # 0-12: suit 2, 13-25: suit 2, 26-38: suit 3, 39-51: suit 4
 # 52-55: number of cards per suit
 # 55-68: number of cards per number
+
 for i in range(len(dset)):
+    train_idx=[]
     for j in range(0,10,2):
         data[i, (dset[i,j]-1)*13 + (dset[i,j+1]-1)]=1
+        train_idx.append((dset[i,j]-1)*13 + (dset[i,j+1]-1))
     # for j in range(0,4):
     #     data[i,52+j] = np.sum((data[i,j*13:(j+1)*13]))
     # for j in range(0,13):
     #     data[i,56+j] = data[i,j] + data[i,13+j] + data[i,26+j] + data[i,39+j]
+    '''
     data[i, 52] = np.sum(data[i, 0:13]*data[i, 13:26])
     data[i, 53] = np.sum(data[i, 26:39]*data[i, 39:52])
     data[i, 54] = np.sum(data[i, 13:26]*data[i, 26:39])
     data[i, 55] = np.sum(data[i, 0:13]*data[i, 39:52])
     data[i, 56] = np.sum(data[i, 0:13]*data[i, 26:39])
     data[i, 57] = np.sum(data[i, 13:26]*data[i, 39:52])
+    '''
+    if train_idx[0]%13 == train_idx[1]%13:
+        data[i, 52] = 1
+
+    if train_idx[2]%13 == train_idx[3]%13:
+        data[i,53] = 1
+
+    if train_idx[1]%13 == train_idx[2]%13:
+        data[i,54]=1
+
+    if train_idx[0]%13 == train_idx[3]%13:
+        data[i,55]=1
+
+    if train_idx[0]%13 == train_idx[2]%13:
+        data[i,56]=1
+
+    if train_idx[1]%13 == train_idx[3]%13:
+        data[i,57]=1
+
     data[i, num_input] = dset[i, 10]
 
 for i in range(len(test_x)):
+    test_idx=[]
     for j in range(0,10,2):
         test_dat[i, (test_x[i,j]-1)*13 + (test_x[i,j+1]-1)]=1
+        test_idx.append((test_x[i,j]-1)*13 + (test_x[i,j+1]-1))
+    '''
     test_dat[i, 52] = np.sum(test_dat[i, 0:13]*test_dat[i, 13:26])
     test_dat[i, 53] = np.sum(test_dat[i, 26:39]*test_dat[i, 39:52])
     test_dat[i, 54] = np.sum(test_dat[i, 13:26]*test_dat[i, 26:39])
     test_dat[i, 55] = np.sum(test_dat[i, 0:13]*test_dat[i, 39:52])
     test_dat[i, 56] = np.sum(test_dat[i, 0:13]*test_dat[i, 26:39])
     test_dat[i, 57] = np.sum(test_dat[i, 13:26]*test_dat[i, 39:52])
+    ''' 
+    if test_idx[0]%13 == test_idx[1]%13:
+        test_dat[i, 52] = 1
+
+    if test_idx[2]%13 == test_idx[3]%13:
+        test_dat[i,53] = 1
+
+    if test_idx[1]%13 == test_idx[2]%13:
+        test_dat[i,54]=1
+
+    if test_idx[0]%13 == test_idx[3]%13:
+        test_dat[i,55]=1
+
+    if test_idx[0]%13 == test_idx[2]%13:
+        test_dat[i,56]=1
+
+    if test_idx[1]%13 == test_idx[3]%13:
+        test_dat[i,57]=1
+
+    
     # for j in range(0,4):
     #     test_dat[i,52+j] = np.sum((test_dat[i,j*13:(j+1)*13]))
     # for j in range(0,13):
